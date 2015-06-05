@@ -21,26 +21,37 @@
 			canvas: null,
 			context: null,
 			gridStroke: "#eee",
-			cellAliveColour: "#000",
-			cellDeadColour: "#ccc",
+			cellAliveColour: null,
 			cellImg: null,
+            cellDimensions: {
+                height: null,
+                width: null,
+                side: {
+                    x: null,
+                    y: null
+                }
+            },
 
 			//Canvas functions
 			init: function() {
 				this.canvas = document.getElementById('game');
 				this.context = this.canvas.getContext('2d');
 				this.context.translate(OFF_X, 0);
-				
-				this.cellImg = new Image();
-				this.cellImg.src = "images/isometric-cube.svg";
-				this.cellImg.width = '17.32';
-				this.cellImg.height = '20';
+                
+                this.cellAliveColour = this.generateColourPallete(53, 179, 32);
+                
+                //Calculate dimensions of side of cells and width and height (relative to siometric view)
+                this.cellDimensions.height = utilities.twoDToIso(1*TILE_W, 1*TILE_W).y - utilities.twoDToIso(0, 0).y;
+                this.cellDimensions.width = Math.abs(utilities.twoDToIso(0, 1*TILE_W).x - utilities.twoDToIso(1*TILE_W, 0).x);
+                this.cellDimensions.side.x = this.cellDimensions.width / 2;
+                this.cellDimensions.side.y = this.cellDimensions.height / 2;
+                                
 			},
 
 			drawGrid: function() {
 
 				//Vertical lines
-				for(x = 0; x <= COLS; x++) {
+				for(var x = 0; x <= COLS; x++) {
 					var start = utilities.twoDToIso(x*TILE_W, 0),
 						end = utilities.twoDToIso(x*TILE_W, MAP_H);				
 					this.context.moveTo(start.x, start.y);
@@ -48,7 +59,7 @@
 				}
 
 				//Horizontal lines
-				for(y = 0; y <= ROWS; y++) {
+				for(var y = 0; y <= ROWS; y++) {
 					var start = utilities.twoDToIso(0, y*TILE_W),
 						end = utilities.twoDToIso(MAP_W, y*TILE_W);				
 					this.context.moveTo(start.x, start.y);
@@ -60,12 +71,12 @@
 			},
 
 			drawCellMap: function() {
-				for(y = 0; y < ROWS; y++) {
-					for(x = 0; x < COLS; x++) {
+                //this.drawCell(3,3);
+                //return;
+				for(var y = 0; y < ROWS; y++) {
+					for(var x = 0; x < COLS; x++) {
 						if(curCellMap[y][x] == 1) {
-							this.drawCell(x, y, this.cellAliveColour);
-						} else {
-							//this.drawCell(x, y, this.cellDeadColour);
+							this.drawCell(x, y);
 						}
 					}
 				}
@@ -73,29 +84,82 @@
 
 			drawCell: function(x, y, colour) {
 				
-				var coords = utilities.twoDToIso(x*TILE_W, y*TILE_W);
-				this.context.drawImage(this.cellImg, coords.x-17.32/2, coords.y-10);
-
-				/*var topLeft = utilities.twoDToIso(x*TILE_W, y*TILE_W),
-					topRight = utilities.twoDToIso(x*TILE_W+TILE_W, y*TILE_W),
-					btmRight = utilities.twoDToIso(x*TILE_W+TILE_W, y*TILE_W+TILE_W),
-					btmLeft = utilities.twoDToIso(x*TILE_W, y*TILE_W+TILE_W);
-
-				utilities.setFill(colour);
-
-				this.context.beginPath();
-				this.context.moveTo(topLeft.x, topLeft.y);
-				this.context.lineTo(topRight.x, topRight.y);
-				this.context.lineTo(btmRight.x, btmRight.y);
-				this.context.lineTo(btmLeft.x, btmLeft.y);
-				this.context.closePath();
-				this.context.fill();*/
+                this.drawCube(x, y);
 
 			},
+            
+            drawCube: function(x, y) {
+                
+                var origin = utilities.twoDToIso(x*TILE_W, y*TILE_W),
+                    top = {
+                        x: origin.x,
+                        y: origin.y - this.cellDimensions.height
+                    },
+                    btmLeft = { 
+                        x: origin.x - this.cellDimensions.side.x, 
+                        y: origin.y + this.cellDimensions.side.y 
+                    },
+                    btm = { 
+                        x: origin.x, 
+                        y: origin.y + this.cellDimensions.height 
+                    },
+                    btmRight = {
+                        x: origin.x + this.cellDimensions.side.x, 
+                        y: origin.y + this.cellDimensions.side.y 
+                    },
+                    midLeft = { 
+                        x: btmLeft.x, 
+                        y: btmLeft.y - this.cellDimensions.height 
+                    },
+                    mid = origin,
+                    midRight = {
+                        x: btmRight.x, 
+                        y: btmRight.y - this.cellDimensions.height 
+                    }
+                                
+                //Draw left face
+                utilities.setFill(this.cellAliveColour.dark);
+                this.context.beginPath();
+				this.context.moveTo(btmLeft.x, btmLeft.y);
+				this.context.lineTo(midLeft.x, midLeft.y);
+				this.context.lineTo(mid.x, mid.y);
+				this.context.lineTo(btm.x, btm.y);
+				this.context.closePath();
+				this.context.fill();
+                
+                //Draw right face
+                utilities.setFill(this.cellAliveColour.light);
+                this.context.beginPath();
+				this.context.moveTo(btm.x, btm.y);
+				this.context.lineTo(mid.x, mid.y);
+				this.context.lineTo(midRight.x, midRight.y);
+				this.context.lineTo(btmRight.x, btmRight.y);
+				this.context.closePath();
+				this.context.fill();
+                
+                //Draw top
+                utilities.setFill(this.cellAliveColour.base);
+                this.context.beginPath();
+				this.context.moveTo(midLeft.x, midLeft.y);
+				this.context.lineTo(top.x, top.y);
+				this.context.lineTo(midRight.x, midRight.y);
+				this.context.lineTo(mid.x, mid.y);
+				this.context.closePath();
+				this.context.fill();
+                
+            },
 
 			clearCanvas: function() {
 				this.context.clearRect(-OFF_X, 0, MAP_W+OFF_X, MAP_H);
-			}
+			},
+            
+            generateColourPallete: function(r, g, b) {
+                return {
+                    base: 'rgb(' + r + ',' + g + ',' + b + ')',
+                    dark: 'rgb(' + Math.floor(0.7 * r) + ',' + Math.floor(0.7 * g) + ',' + Math.floor(0.7 * b) + ')',
+                    light: 'rgb(' + Math.floor(1.3 * r) + ',' + Math.floor(1.3 * g) + ',' + Math.floor(1.3 * b) + ')'
+                }
+            }
 		};
 
 		//Map object
@@ -116,8 +180,8 @@
 
 				var map = utilities.create2DArray(ROWS, COLS);
 
-				for(y = 0; y < ROWS; y++) {
-					for(x = 0; x < COLS; x++) {
+				for(var y = 0; y < ROWS; y++) {
+					for(var x = 0; x < COLS; x++) {
 						var rand = utilities.getRandomNum(0, 1);
 						map[y][x] = (rand <= density) ? 1 : 0;
 					}
@@ -128,8 +192,8 @@
 			generateEmptyMap: function() {
 				var map = utilities.create2DArray(ROWS, COLS);
 
-				for(y = 0; y < ROWS; y++) {
-					for(x = 0; x < COLS; x++) {
+				for(var y = 0; y < ROWS; y++) {
+					for(var x = 0; x < COLS; x++) {
 						var rand = utilities.getRandomNum(0, 1);
 						map[y][x] = 0;
 					}
@@ -290,5 +354,7 @@
 			gol.update();
 		}, 1000/fps);
 	}
-	main();
+    
+    main();
+    
 })();
