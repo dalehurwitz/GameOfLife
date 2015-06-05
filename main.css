@@ -1,0 +1,18 @@
+html, body {
+    height:100%;
+    padding:0;
+    margin:0;
+}
+
+.game-container {
+    width:800px;
+    height:600px;
+    margin:0 auto;
+    position: relative;
+    top:50%;
+    transform: translateY(-50%);
+}
+
+#game {
+    border: 1px solid #eee;
+}
