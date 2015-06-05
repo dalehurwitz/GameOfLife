@@ -40,7 +40,7 @@
                 
                 this.cellAliveColour = this.generateColourPallete(53, 179, 32);
                 
-                //Calculate dimensions of side of cells and width and height (relative to siometric view)
+                //Calculate dimensions of side, width and height of cell (relative to isometric view)
                 this.cellDimensions.height = utilities.twoDToIso(1*TILE_W, 1*TILE_W).y - utilities.twoDToIso(0, 0).y;
                 this.cellDimensions.width = Math.abs(utilities.twoDToIso(0, 1*TILE_W).x - utilities.twoDToIso(1*TILE_W, 0).x);
                 this.cellDimensions.side.x = this.cellDimensions.width / 2;
