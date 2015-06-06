@@ -52,7 +52,7 @@
                 this.mouseLayer.ctx.translate(OFF_X, 0);
                 this.staticLayer.ctx.translate(OFF_X, 0);
                 
-                this.cellAliveColour = this.generateColourPallete(53, 179, 32);
+                this.cellAliveColour = this.generateColourPallete(38, 199, 145);
                 
                 //Calculate dimensions of side, width and height of cell (relative to isometric view)
                 this.cellDimensions.height = utilities.twoDToIso(1*TILE_W, 1*TILE_W).y - utilities.twoDToIso(0, 0).y;
@@ -67,30 +67,9 @@
 			},
             
             drawStaticLayer: function() {
-                this.drawGrid();
+                this.drawBase();
+                //this.drawGrid();
             },
-
-			drawGrid: function() {
-
-				//Vertical lines
-				for(var x = 0; x <= COLS; x++) {
-					var start = utilities.twoDToIso(x*TILE_W, 0),
-						end = utilities.twoDToIso(x*TILE_W, MAP_H);				
-					canvas.layers[2].ctx.moveTo(start.x, start.y);
-					canvas.layers[2].ctx.lineTo(end.x, end.y);
-				}
-
-				//Horizontal lines
-				for(var y = 0; y <= ROWS; y++) {
-					var start = utilities.twoDToIso(0, y*TILE_W),
-						end = utilities.twoDToIso(MAP_W, y*TILE_W);				
-					canvas.layers[2].ctx.moveTo(start.x, start.y);
-					canvas.layers[2].ctx.lineTo(end.x, end.y);
-				}
-
-				utilities.setStroke(this.gridStroke, 2);
-
-			},
 
 			drawCellMap: function() {
                 //this.drawCell(3,3);
@@ -162,8 +141,8 @@
                     midRight = {
                         x: btmRight.x, 
                         y: btmRight.y - this.cellDimensions.height 
-                    }
-                                
+                    };
+                                                
                 //Draw left face
                 utilities.setFill(this.cellAliveColour.dark, 0);
                 this.cellLayer.ctx.beginPath();
@@ -193,6 +172,81 @@
 				this.cellLayer.ctx.lineTo(mid.x, mid.y);
 				this.cellLayer.ctx.closePath();
 				this.cellLayer.ctx.fill();
+                
+            },
+            
+            drawGrid: function() {
+
+				//Vertical lines
+				for(var x = 0; x <= COLS; x++) {
+					var start = utilities.twoDToIso(x*TILE_W, 0),
+						end = utilities.twoDToIso(x*TILE_W, MAP_H);				
+					canvas.layers[2].ctx.moveTo(start.x, start.y);
+					canvas.layers[2].ctx.lineTo(end.x, end.y);
+				}
+
+				//Horizontal lines
+				for(var y = 0; y <= ROWS; y++) {
+					var start = utilities.twoDToIso(0, y*TILE_W),
+						end = utilities.twoDToIso(MAP_W, y*TILE_W);				
+					canvas.layers[2].ctx.moveTo(start.x, start.y);
+					canvas.layers[2].ctx.lineTo(end.x, end.y);
+				}
+
+				utilities.setStroke(this.gridStroke, 2);
+
+			},
+            
+            drawBase: function() {
+                
+                var ground = this.generateColourPallete(51, 199, 38),
+                    soil = this.generateColourPallete(173, 152, 33),
+                    top = utilities.twoDToIso(0,0),
+                    right = utilities.twoDToIso(COLS*TILE_W, 0),
+                    btm = utilities.twoDToIso(COLS*TILE_W, ROWS*TILE_W),
+                    left = utilities.twoDToIso(0, ROWS*TILE_W);
+                
+                
+                this.layers[2].ctx.lineWidth = 0;
+                //Draw the ground
+                utilities.setFill(ground.base, 2);
+                this.layers[2].ctx.beginPath();
+				this.layers[2].ctx.moveTo(top.x, top.y);
+				this.layers[2].ctx.lineTo(right.x, right.y);
+				this.layers[2].ctx.lineTo(btm.x, btm.y);
+				this.layers[2].ctx.lineTo(left.x, left.y);
+				this.layers[2].ctx.closePath();
+				this.layers[2].ctx.fill();
+                
+                var faceHeight = 80;
+                var gradientLeft = this.layers[2].ctx.createLinearGradient(btm.x,btm.y,btm.x-5,btm.y+10);
+                gradientLeft.addColorStop(0,ground.dark);
+                gradientLeft.addColorStop(0.996,ground.dark);
+                gradientLeft.addColorStop(1,soil.dark);
+                var gradientRight = this.layers[2].ctx.createLinearGradient(btm.x,btm.y,btm.x+5,btm.y+10);
+                gradientRight.addColorStop(0,ground.light);
+                gradientRight.addColorStop(0.996,ground.light);
+                gradientRight.addColorStop(1,soil.light);
+                
+                //Draw the left face
+                utilities.setFill(gradientLeft, 2);
+                this.layers[2].ctx.beginPath();
+				this.layers[2].ctx.moveTo(btm.x, btm.y);
+				this.layers[2].ctx.lineTo(btm.x, btm.y + faceHeight);
+				this.layers[2].ctx.lineTo(left.x, left.y + faceHeight);
+				this.layers[2].ctx.lineTo(left.x, left.y);
+				this.layers[2].ctx.closePath();
+				this.layers[2].ctx.fill();
+                
+                //Draw the right face
+                utilities.setFill(gradientRight, 2);
+                this.layers[2].ctx.beginPath();
+				this.layers[2].ctx.moveTo(btm.x, btm.y);
+				this.layers[2].ctx.lineTo(btm.x, btm.y + faceHeight);
+				this.layers[2].ctx.lineTo(right.x, right.y + faceHeight);
+				this.layers[2].ctx.lineTo(right.x, right.y);
+				this.layers[2].ctx.closePath();
+				this.layers[2].ctx.fill();
                 
             },
             
@@ -231,7 +285,7 @@
 
 			//Map functions
 			init: function() {
-				curCellMap = this.generateRandomMap(0.05);
+				curCellMap = this.generateRandomMap(0.075);
 				//curCellMap = this.generateTestMap();
 				nextCellMap = this.generateEmptyMap();
 			},
