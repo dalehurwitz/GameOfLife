@@ -18,6 +18,10 @@
 
 		//Canvas object
 		var canvas = {
+            layers: [],
+            cellLayer: {},
+            mouseLayer: {},
+            staticLayer: {},
 			canvas: null,
 			context: null,
             canvasW: null,
@@ -28,11 +32,25 @@
 
 			//Canvas functions
 			init: function() {
-				this.canvas = document.getElementById('game');
-				this.context = this.canvas.getContext('2d');
-                this.canvasW = this.canvas.width;
+                
+                this.cellLayer.canvas = document.getElementById('CellLayer');
+				this.cellLayer.ctx = this.cellLayer.canvas.getContext('2d');
+                this.mouseLayer.canvas = document.getElementById('MouseLayer');
+				this.mouseLayer.ctx = this.mouseLayer.canvas.getContext('2d');
+                this.staticLayer.canvas = document.getElementById('StaticLayer');
+				this.staticLayer.ctx = this.staticLayer.canvas.getContext('2d');
+                
+                this.layers.push({ canvas: this.cellLayer.canvas, ctx: this.cellLayer.ctx});
+                this.layers.push({ canvas: this.mouseLayer.canvas, ctx: this.mouseLayer.ctx});
+                this.layers.push({ canvas: this.staticLayer.canvas, ctx: this.staticLayer.ctx});
+                
+                this.canvasW = this.cellLayer.canvas.width;
                 OFF_X = this.canvasW/2 - TILE_W/2;
-				this.context.translate(OFF_X, 0);
+                
+                //Center all layers in view
+				this.cellLayer.ctx.translate(OFF_X, 0);
+                this.mouseLayer.ctx.translate(OFF_X, 0);
+                this.staticLayer.ctx.translate(OFF_X, 0);
                 
                 this.cellAliveColour = this.generateColourPallete(53, 179, 32);
                 
@@ -43,8 +61,14 @@
                     x: this.cellDimensions.width / 2,
                     y: this.cellDimensions.height / 2
                 }
+                
+                this.drawStaticLayer();
                                 
 			},
+            
+            drawStaticLayer: function() {
+                this.drawGrid();
+            },
 
 			drawGrid: function() {
 
@@ -52,19 +76,19 @@
 				for(var x = 0; x <= COLS; x++) {
 					var start = utilities.twoDToIso(x*TILE_W, 0),
 						end = utilities.twoDToIso(x*TILE_W, MAP_H);				
-					this.context.moveTo(start.x, start.y);
-					this.context.lineTo(end.x, end.y);
+					canvas.layers[2].ctx.moveTo(start.x, start.y);
+					canvas.layers[2].ctx.lineTo(end.x, end.y);
 				}
 
 				//Horizontal lines
 				for(var y = 0; y <= ROWS; y++) {
 					var start = utilities.twoDToIso(0, y*TILE_W),
 						end = utilities.twoDToIso(MAP_W, y*TILE_W);				
-					this.context.moveTo(start.x, start.y);
-					this.context.lineTo(end.x, end.y);
+					canvas.layers[2].ctx.moveTo(start.x, start.y);
+					canvas.layers[2].ctx.lineTo(end.x, end.y);
 				}
 
-				utilities.setStroke(this.gridStroke);
+				utilities.setStroke(this.gridStroke, 2);
 
 			},
 
@@ -85,6 +109,8 @@
 			},
             
             drawTile: function(x, y) {
+                var ctx = this.mouseLayer.ctx;
+                
                 var top = utilities.twoDToIso(x*TILE_W, y*TILE_W),
                     left = {
                         x: top.x - this.cellDimensions.side.x,
@@ -99,14 +125,14 @@
                         y: top.y + this.cellDimensions.height
                     }
                 
-                utilities.setFill('#333');
-                this.context.beginPath();
-				this.context.moveTo(top.x, top.y);
-				this.context.lineTo(left.x, left.y);
-				this.context.lineTo(btm.x, btm.y);
-				this.context.lineTo(right.x, right.y);
-				this.context.closePath();
-				this.context.fill();
+                utilities.setFill('#333', 0);
+                ctx.beginPath();
+				ctx.moveTo(top.x, top.y);
+				ctx.lineTo(left.x, left.y);
+				ctx.lineTo(btm.x, btm.y);
+				ctx.lineTo(right.x, right.y);
+				ctx.closePath();
+				ctx.fill();
             },
             
             drawCube: function(x, y) {
@@ -139,34 +165,34 @@
                     }
                                 
                 //Draw left face
-                utilities.setFill(this.cellAliveColour.dark);
-                this.context.beginPath();
-				this.context.moveTo(btmLeft.x, btmLeft.y);
-				this.context.lineTo(midLeft.x, midLeft.y);
-				this.context.lineTo(mid.x, mid.y);
-				this.context.lineTo(btm.x, btm.y);
-				this.context.closePath();
-				this.context.fill();
+                utilities.setFill(this.cellAliveColour.dark, 0);
+                this.cellLayer.ctx.beginPath();
+				this.cellLayer.ctx.moveTo(btmLeft.x, btmLeft.y);
+				this.cellLayer.ctx.lineTo(midLeft.x, midLeft.y);
+				this.cellLayer.ctx.lineTo(mid.x, mid.y);
+				this.cellLayer.ctx.lineTo(btm.x, btm.y);
+				this.cellLayer.ctx.closePath();
+				this.cellLayer.ctx.fill();
                 
                 //Draw right face
-                utilities.setFill(this.cellAliveColour.light);
-                this.context.beginPath();
-				this.context.moveTo(btm.x, btm.y);
-				this.context.lineTo(mid.x, mid.y);
-				this.context.lineTo(midRight.x, midRight.y);
-				this.context.lineTo(btmRight.x, btmRight.y);
-				this.context.closePath();
-				this.context.fill();
+                utilities.setFill(this.cellAliveColour.light, 0);
+                this.cellLayer.ctx.beginPath();
+				this.cellLayer.ctx.moveTo(btm.x, btm.y);
+				this.cellLayer.ctx.lineTo(mid.x, mid.y);
+				this.cellLayer.ctx.lineTo(midRight.x, midRight.y);
+				this.cellLayer.ctx.lineTo(btmRight.x, btmRight.y);
+				this.cellLayer.ctx.closePath();
+				this.cellLayer.ctx.fill();
                 
                 //Draw top
-                utilities.setFill(this.cellAliveColour.base);
-                this.context.beginPath();
-				this.context.moveTo(midLeft.x, midLeft.y);
-				this.context.lineTo(top.x, top.y);
-				this.context.lineTo(midRight.x, midRight.y);
-				this.context.lineTo(mid.x, mid.y);
-				this.context.closePath();
-				this.context.fill();
+                utilities.setFill(this.cellAliveColour.base, 0);
+                this.cellLayer.ctx.beginPath();
+				this.cellLayer.ctx.moveTo(midLeft.x, midLeft.y);
+				this.cellLayer.ctx.lineTo(top.x, top.y);
+				this.cellLayer.ctx.lineTo(midRight.x, midRight.y);
+				this.cellLayer.ctx.lineTo(mid.x, mid.y);
+				this.cellLayer.ctx.closePath();
+				this.cellLayer.ctx.fill();
                 
             },
             
@@ -178,23 +204,24 @@
                         y: Math.floor(twoDCoords.y/TILE_W)
                     };
                 
+                this.clearLayer(1);
+                
                 //Only draw tiles that fall within the map
                 if(adjusted2dCoords.x < 0 || adjusted2dCoords.x > COLS-1 || adjusted2dCoords.y < 0 || adjusted2dCoords.y > ROWS-1) {
                     return;
                 }
-                
                 this.drawTile(adjusted2dCoords.x, adjusted2dCoords.y);
             },
 
-			clearCanvas: function() {
-				this.context.clearRect(-OFF_X, 0, MAP_W+OFF_X, MAP_H);
+			clearLayer: function(layer) {
+                canvas.layers[layer].ctx.clearRect(-OFF_X, 0, MAP_W+OFF_X, MAP_H);
 			},
             
             generateColourPallete: function(r, g, b) {
                 return {
                     base: 'rgb(' + r + ',' + g + ',' + b + ')',
                     dark: 'rgb(' + Math.floor(0.7 * r) + ',' + Math.floor(0.7 * g) + ',' + Math.floor(0.7 * b) + ')',
-                    light: 'rgb(' + Math.floor(1.3 * r) + ',' + Math.floor(1.3 * g) + ',' + Math.floor(1.3 * b) + ')'
+                    light: 'rgb(' + Math.floor(1.15 * r) + ',' + Math.floor(1.15 * g) + ',' + Math.floor(1.15 * b) + ')'
                 }
             }
 		};
@@ -313,12 +340,18 @@
             mousePos: {},
             
             init: function() {
-                this.canvasBounds = canvas.canvas.getBoundingClientRect();
+                setCanvasBounds();
                 this.bindMouseToCanvas();
+                
+                window.addEventListener('resize', setCanvasBounds);
+                
+                function setCanvasBounds() {
+                    mouse.canvasBounds = canvas.cellLayer.canvas.getBoundingClientRect();
+                }
             },
             
             bindMouseToCanvas: function() {
-                canvas.canvas.addEventListener('mousemove', function(evt) {
+                canvas.cellLayer.canvas.addEventListener('mousemove', function(evt) {
                     //Takes into account offsets used to center canvas on screen
                     mouse.mousePos.x =  evt.clientX - mouse.canvasBounds.left - OFF_X,
                     mouse.mousePos.y =  evt.clientY - mouse.canvasBounds.top
@@ -328,13 +361,13 @@
 
 		//utilities
 		var utilities = {
-			setStroke: function(colour) {
-				canvas.context.strokeStyle = colour;
-				canvas.context.stroke();
+			setStroke: function(colour, layer) {
+                canvas.layers[layer].ctx.strokeStyle = colour;
+                canvas.layers[layer].ctx.stroke();
 			},
 
-			setFill: function(colour) {
-				canvas.context.fillStyle = colour;
+			setFill: function(colour, layer) {
+                canvas.layers[layer].ctx.fillStyle = colour;
 			},
 
 			create2DArray: function(_rows, _cols) {
@@ -384,8 +417,7 @@
 
 		//Draw gamestate on canvas
 		this.draw = function() {
-			canvas.clearCanvas();
-			canvas.drawGrid();
+			canvas.clearLayer(0);
 			canvas.drawCellMap();
 		};
         
