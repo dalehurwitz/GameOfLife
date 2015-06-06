@@ -25,7 +25,7 @@
 			canvas: null,
 			context: null,
             canvasW: null,
-			gridStroke: "#eee",
+			gridStroke: "rgba(255,255,255,0.2)",
 			cellAliveColour: null,
 			cellImg: null,
             cellDimensions: {},
@@ -68,7 +68,7 @@
             
             drawStaticLayer: function() {
                 this.drawBase();
-                //this.drawGrid();
+                this.drawGrid();
             },
 
 			drawCellMap: function() {
