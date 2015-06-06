@@ -10,7 +10,7 @@
 		var MAP_W = 600,
 			MAP_H = 600,
 			TILE_W = 10,
-			OFF_X = 400 - TILE_W/2,
+			OFF_X,
 			COLS = MAP_W / TILE_W,
 			ROWS = MAP_H / TILE_W,
 			curCellMap = null,
@@ -20,22 +20,18 @@
 		var canvas = {
 			canvas: null,
 			context: null,
+            canvasW: null,
 			gridStroke: "#eee",
 			cellAliveColour: null,
 			cellImg: null,
-            cellDimensions: {
-                height: null,
-                width: null,
-                side: {
-                    x: null,
-                    y: null
-                }
-            },
+            cellDimensions: {},
 
 			//Canvas functions
 			init: function() {
 				this.canvas = document.getElementById('game');
 				this.context = this.canvas.getContext('2d');
+                this.canvasW = this.canvas.width;
+                OFF_X = this.canvasW/2 - TILE_W/2
 				this.context.translate(OFF_X, 0);
                 
                 this.cellAliveColour = this.generateColourPallete(53, 179, 32);
@@ -43,8 +39,10 @@
                 //Calculate dimensions of side, width and height of cell (relative to isometric view)
                 this.cellDimensions.height = utilities.twoDToIso(1*TILE_W, 1*TILE_W).y - utilities.twoDToIso(0, 0).y;
                 this.cellDimensions.width = Math.abs(utilities.twoDToIso(0, 1*TILE_W).x - utilities.twoDToIso(1*TILE_W, 0).x);
-                this.cellDimensions.side.x = this.cellDimensions.width / 2;
-                this.cellDimensions.side.y = this.cellDimensions.height / 2;
+                this.cellDimensions.side = {
+                    x: this.cellDimensions.width / 2,
+                    y: this.cellDimensions.height / 2
+                }
                                 
 			},
 
