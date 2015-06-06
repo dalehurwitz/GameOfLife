@@ -31,7 +31,7 @@
 				this.canvas = document.getElementById('game');
 				this.context = this.canvas.getContext('2d');
                 this.canvasW = this.canvas.width;
-                OFF_X = this.canvasW/2 - TILE_W/2
+                OFF_X = this.canvasW/2 - TILE_W/2;
 				this.context.translate(OFF_X, 0);
                 
                 this.cellAliveColour = this.generateColourPallete(53, 179, 32);
@@ -81,10 +81,33 @@
 			},
 
 			drawCell: function(x, y, colour) {
-				
                 this.drawCube(x, y);
-
 			},
+            
+            drawTile: function(x, y) {
+                var top = utilities.twoDToIso(x*TILE_W, y*TILE_W),
+                    left = {
+                        x: top.x - this.cellDimensions.side.x,
+                        y: top.y + this.cellDimensions.side.y
+                    },
+                    right = {
+                        x: top.x + this.cellDimensions.side.x,
+                        y: top.y + this.cellDimensions.side.y
+                    },
+                    btm = {
+                        x: top.x,
+                        y: top.y + this.cellDimensions.height
+                    }
+                
+                utilities.setFill('#333');
+                this.context.beginPath();
+				this.context.moveTo(top.x, top.y);
+				this.context.lineTo(left.x, left.y);
+				this.context.lineTo(btm.x, btm.y);
+				this.context.lineTo(right.x, right.y);
+				this.context.closePath();
+				this.context.fill();
+            },
             
             drawCube: function(x, y) {
                 
@@ -145,6 +168,22 @@
 				this.context.closePath();
 				this.context.fill();
                 
+            },
+            
+            drawMouseState: function() {
+                //As the mouse coordinats are navigating isometric space, they need to first be converted to 2d
+                var twoDCoords = utilities.isoTo2d(mouse.mousePos.x, mouse.mousePos.y),
+                    adjusted2dCoords = {
+                        x: Math.floor(twoDCoords.x/TILE_W),
+                        y: Math.floor(twoDCoords.y/TILE_W)
+                    };
+                
+                //Only draw tiles that fall within the map
+                if(adjusted2dCoords.x < 0 || adjusted2dCoords.x > COLS-1 || adjusted2dCoords.y < 0 || adjusted2dCoords.y > ROWS-1) {
+                    return;
+                }
+                
+                this.drawTile(adjusted2dCoords.x, adjusted2dCoords.y);
             },
 
 			clearCanvas: function() {
@@ -267,6 +306,25 @@
 				map.refreshNextCellMap();
 			}
 		};
+        
+        //Add mouse interaction
+        var mouse = {
+            canvasBounds: {},
+            mousePos: {},
+            
+            init: function() {
+                this.canvasBounds = canvas.canvas.getBoundingClientRect();
+                this.bindMouseToCanvas();
+            },
+            
+            bindMouseToCanvas: function() {
+                canvas.canvas.addEventListener('mousemove', function(evt) {
+                    //Takes into account offsets used to center canvas on screen
+                    mouse.mousePos.x =  evt.clientX - mouse.canvasBounds.left - OFF_X,
+                    mouse.mousePos.y =  evt.clientY - mouse.canvasBounds.top
+                });
+            }
+        };
 
 		//utilities
 		var utilities = {
@@ -316,6 +374,7 @@
 		this.init = function() {
 			map.init();
 			canvas.init();
+            mouse.init();
 		};
 
 		//Update game state
@@ -329,6 +388,10 @@
 			canvas.drawGrid();
 			canvas.drawCellMap();
 		};
+        
+        this.renderMouseActivity = function() {
+            canvas.drawMouseState();
+        };
 
 	};
 
@@ -353,6 +416,13 @@
 		}, 1000/fps);
 	}
     
+    //Mouse interactions need to be rendered seperately to main loop to provide real-time feedback
+    function interactionLoop() {
+        window.requestAnimationFrame(interactionLoop);    
+        gol.renderMouseActivity();
+    }
+    
     main();
+    interactionLoop();
     
 })();
