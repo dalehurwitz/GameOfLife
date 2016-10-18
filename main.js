@@ -260,7 +260,7 @@
             init: function() {
                 this.generateGliderGun();
                 //curCellMap = this.generateGliderGun();
-                curCellMap = this.generateRandomMap(0.075);
+                curCellMap = this.generateRandomMap(0.095);
                 //curCellMap = this.generateTestMap();
                 nextCellMap = this.generateEmptyMap();
             },
